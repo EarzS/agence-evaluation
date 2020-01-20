@@ -16,13 +16,17 @@ Route::get('/logout', 'Auth\LoginController@logout');
 Route::get('/', 'HomeController@index');
 
 // Consultant View Routes
-Route::get('/consultant', 'ConsultantController@index');
-Route::get('/consultant/relatory', 'ConsultantController@relatory');
-Route::get('/consultant/cake', 'ConsultantController@cake');
-Route::get('/consultant/graphic', 'ConsultantController@graphic');
+Route::group(['prefix' => 'consultant', 'as'=>'consultant.'/*, 'middleware'=>['auth']*/] ,function () {
+	Route::get('/', 'ConsultantController@index')->name('index');
+    Route::get('/relatory', 'ConsultantController@relatory')->name('relatory');
+    Route::get('/cake', 'ConsultantController@cake')->name('cake');
+    Route::get('/graphic', 'ConsultantController@graphic')->name('graphic');
+});
 
 // Client View Routes
-Route::get('/client', 'ClientController@index');
-Route::get('/client/relatory', 'ClientController@relatory');
-Route::get('/client/cake', 'ClientController@cake');
-Route::get('/client/graphic', 'ClientController@graphic');
+Route::group(['prefix' => 'client', 'as'=>'client.'/*, 'middleware'=>['auth']*/] ,function () {
+	Route::get('/', 'ClientController@index')->name('index');
+    Route::get('/relatory', 'ClientController@relatory')->name('relatory');
+    Route::get('/cake', 'ClientController@cake')->name('cake');
+    Route::get('/graphic', 'ClientController@graphic')->name('graphic');
+});
