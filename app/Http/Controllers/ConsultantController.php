@@ -259,12 +259,16 @@ class ConsultantController extends Controller
 	    				if( !isset($cake['cake'][ $consultant->co_usuario ] ) ) {
 	    					$cake['cake'][ $consultant->co_usuario ]['receita_liquida'] = 0;
 	    				} else {
-	    					$cake['cake'][ $consultant->co_usuario ]['receita_liquida'] += $receita_liquida;
 	    					$cake['total'] += $receita_liquida;
+	    					$cake['cake'][ $consultant->co_usuario ]['receita_liquida'] += $receita_liquida;
 	    				}
 	    			}
     			}
     		}
+    	}
+
+    	foreach ($cake['cake'] as $co_usuario => $consultant) {
+    		$cake['cake'][ $co_usuario ]['percentage'] = round(($consultant['receita_liquida'] * 100) / ($cake['total']), 2);
     	}
 
 		if($request->developer) {
