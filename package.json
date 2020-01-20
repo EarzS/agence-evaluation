@@ -10,6 +10,7 @@
     "bootstrap-sass": "^3.0.0"
   },
   "dependencies": {
+    "browserify": "^16.5.0",
     "node-sass": "^4.13.1"
   }
 }

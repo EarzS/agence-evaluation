@@ -21,7 +21,7 @@ class ConsultantController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
     	// Retrieve all Consultants https://stackoverflow.com/questions/52149031/laravel-join-query-with-conditions
 		$consultants = 	User::whereHas('consultants', function($query) {
@@ -36,7 +36,7 @@ class ConsultantController extends Controller
 			dd($consultants);
 		}
 
-        return view('dashboard.consultant.index')->with($consultants);
+        return view('dashboard.consultant.index')->with(['consultants'=> $consultants]);
     }
 
     /**
@@ -124,7 +124,7 @@ class ConsultantController extends Controller
 			dd($relatory);
 		}
 
-        return view('dashboard.consultant.relatory')->with($relatory);
+        return view('dashboard.consultant.relatory')->with(['relatory'=> $relatory]);
     }
 
     /**
@@ -132,11 +132,11 @@ class ConsultantController extends Controller
      */
     public function graphic(Request $request)
     {
-    	$request->consultants = [
+    	/*$request->consultants = [
     		'carlos.arruda'
     	];
     	$request->from = '2007-01-01';
-    	$request->to = '2008-01-01';
+    	$request->to = '2008-01-01';*/
 
     	$consultants =  $request->consultants;
 
@@ -201,7 +201,7 @@ class ConsultantController extends Controller
 			dd($graphic);
 		}
 
-        return view('dashboard.consultant.graphic')->with($graphic);
+        return view('dashboard.consultant.graphic')->with(['graphic'=> $graphic]);
     }
 
     /**
@@ -209,12 +209,12 @@ class ConsultantController extends Controller
      */
     public function cake(Request $request)
     {
-    	$request->consultants = [
+    	/*$request->consultants = [
     		'carlos.arruda',
     		'carlos.carvalho'
     	];
     	$request->from = '2007-01-01';
-    	$request->to = '2008-01-01';
+    	$request->to = '2008-01-01';*/
 
     	$consultants =  $request->consultants;
 
@@ -276,6 +276,6 @@ class ConsultantController extends Controller
 			dd($cake);
 		}
 
-    	return view('dashboard.consultant.cake')->with($cake);
+    	return view('dashboard.consultant.cake')->with(['cake'=> $cake]);
     }
 }
