@@ -11,8 +11,8 @@
 	<tbody>
 		@foreach($consultants as $index => $consultant)
 		<tr>
-			<td><!-- Username -->
-				<input type="checkbox">
+			<td><!-- Checkbox -->
+				<input type="checkbox" name="consultants[]" value="{{$consultant->co_usuario}}">
 			</td>
 			<td><!-- Username -->
 				{{$consultant->co_usuario}}

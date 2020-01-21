@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
+use Exception;
 
 use Carbon\Carbon;
 
@@ -50,81 +51,101 @@ class ConsultantController extends Controller
     	$request->from = '2007-01-01';
     	$request->to = '2008-01-01';*/
 
-    	$consultants =  $request->consultants;
+        try {
 
-    	$from = Carbon::parse($request->from);
-    	$to = Carbon::parse($request->to);
+        	$consultants =  $request->consultants;
 
-    	if($request->developer) {
-			echo "Consultants";
-			dump($consultants);
+        	$from = Carbon::parse($request['from-date']);
+        	$to = Carbon::parse($request['to-date']);
 
-			echo "From";
-			dump($from);
+        	if(!$consultants)
+    			throw new Exception("No consultant has been selected.", 1);
+        	if(!$from || !$to)
+    			throw new Exception("Please fill all the dates from the period.", 1);
 
-			echo "To";
-			dump($to);
-		}
+        	if($request->developer) {
+        		echo "Consultants";
+        		dump($consultants);
 
-    	$relatory = [];
-    	foreach ($consultants as $consultant) {
+        		echo "From";
+        		dump($from);
 
-    		$consultant = User::find($consultant);
+        		echo "To";
+        		dump($to);
+        	}
 
-    		if($request->developer) {
-    			echo "Consultant";
-    			dump($consultant);
-    		}
+        	$relatory = [];
+        	foreach ($consultants as $consultant) {
 
-    		// Custo Fixo
-    		$salary = $consultant->salary;
-    		$custo_fixo = $salary->brut_salario;
+        		$consultant = User::find($consultant);
 
-    		$service_orders = $consultant->service_orders;
+        		$relatory[ $consultant->co_usuario ]['no_usuario'] = $consultant->no_usuario;
 
-    		foreach ($service_orders as $service_order) {
+        		if($request->developer) {
+        			echo "Consultant";
+        			dump($consultant);
+        		}
 
-    			$invoices = $service_order->invoices;
+				// Custo Fixo
+        		$salary = $consultant->salary;
 
-    			foreach ($invoices as $invoice) {
-    				$created_at = Carbon::parse($invoice->data_emissao);
+        		if(!$salary)
+        			throw new Exception("The consultant '$consultant->no_usuario' doesn't have a salary.", 1);
+        			
+        		
+        		$custo_fixo = $salary->brut_salario;
 
-	    			if( $created_at->between($from, $to) ) {
-	    				// Receita liquida
-	    				$receita_liquida = $invoice->valor - ( $invoice->valor * ( $invoice->total_imp_inc / 100 ) );
-	    				
-	    				// Comissao
-	    				$comissao = $receita_liquida * ( $invoice->comissao_cn / 100 );
+        		$service_orders = $consultant->service_orders;
 
-	    				$created_at_s = $created_at->format('Y-m');
+        		foreach ($service_orders as $service_order) {
 
-	    				if( !isset($relatory[ $consultant->co_usuario ][ $created_at_s ] ) ) {
-	    					$relatory[ $consultant->co_usuario ][ $created_at_s ]['receita_liquida'] = 0;
-	    					$relatory[ $consultant->co_usuario ][ $created_at_s ]['custo_fixo'] = $custo_fixo;
-	    					$relatory[ $consultant->co_usuario ][ $created_at_s ]['comissao'] = 0;
-	    					$relatory[ $consultant->co_usuario ][ $created_at_s ]['lucro'] = 0;
-	    				} else {
-	    					$relatory[ $consultant->co_usuario ][ $created_at_s ]['receita_liquida'] += $receita_liquida;
-	    					$relatory[ $consultant->co_usuario ][ $created_at_s ]['comissao'] += $comissao;
+        			$invoices = $service_order->invoices;
 
-	    					// Lucro 
-	    					$relatory[ $consultant->co_usuario ][ $created_at_s ]['lucro'] = 
-	    						$relatory[ $consultant->co_usuario ][ $created_at_s ]['receita_liquida'] - 
-	    						( $relatory[ $consultant->co_usuario ][ $created_at_s ]['custo_fixo'] +
-	    						  $relatory[ $consultant->co_usuario ][ $created_at_s ]['comissao'] );
-	    				}
-	    			}
-    			}
+        			foreach ($invoices as $invoice) {
+        				$created_at = Carbon::parse($invoice->data_emissao);
 
-    		}
-    	}
+        				if( $created_at->between($from, $to) ) {
+							// Receita liquida
+        					$receita_liquida = $invoice->valor - ( $invoice->valor * ( $invoice->total_imp_inc / 100 ) );
 
-    	if($request->developer) {
-			echo "Relatives data";
-			dd($relatory);
-		}
+							// Comissao
+        					$comissao = $receita_liquida * ( $invoice->comissao_cn / 100 );
 
-        return view('dashboard.consultant.relatory')->with(['relatory'=> $relatory]);
+        					$created_at_s = $created_at->format('Y-m');
+
+        					if( !isset($relatory[ $consultant->co_usuario ]['period'][ $created_at_s ] ) ) {
+        						$relatory[ $consultant->co_usuario ]['period'][ $created_at_s ]['receita_liquida'] = 0;
+        						$relatory[ $consultant->co_usuario ]['period'][ $created_at_s ]['custo_fixo'] = $custo_fixo;
+        						$relatory[ $consultant->co_usuario ]['period'][ $created_at_s ]['comissao'] = 0;
+        						$relatory[ $consultant->co_usuario ]['period'][ $created_at_s ]['lucro'] = 0;
+        					} else {
+        						$relatory[ $consultant->co_usuario ]['period'][ $created_at_s ]['receita_liquida'] += $receita_liquida;
+        						$relatory[ $consultant->co_usuario ]['period'][ $created_at_s ]['comissao'] += $comissao;
+
+								// Lucro 
+        						$relatory[ $consultant->co_usuario ]['period'][ $created_at_s ]['lucro'] = 
+        						$relatory[ $consultant->co_usuario ]['period'][ $created_at_s ]['receita_liquida'] - 
+        						( $relatory[ $consultant->co_usuario ]['period'][ $created_at_s ]['custo_fixo'] +
+        							$relatory[ $consultant->co_usuario ]['period'][ $created_at_s ]['comissao'] );
+        					}
+        				}
+        			}
+
+        		}
+        	}
+
+        	if($request->developer) {
+        		echo "Relatives data";
+        		dd($relatory);
+        	}
+
+        	return view('dashboard.consultant.relatory')->with(['relatory'=> $relatory]);
+        } catch (\Exception $exception) {
+            \Log::error($exception->getMessage());
+            return back()
+                    ->with('notification_error', $exception->getMessage())
+                    ->withInput();
+        }
     }
 
     /**
@@ -138,70 +159,89 @@ class ConsultantController extends Controller
     	$request->from = '2007-01-01';
     	$request->to = '2008-01-01';*/
 
-    	$consultants =  $request->consultants;
+    	try {
 
-    	$from = Carbon::parse($request->from);
-    	$to = Carbon::parse($request->to);
+	    	$consultants =  $request->consultants;
 
-    	if($request->developer) {
-			echo "Consultants";
-			dump($consultants);
+	    	$from = Carbon::parse($request['from-date']);
+        	$to = Carbon::parse($request['to-date']);
 
-			echo "From";
-			dump($from);
+	    	if(!$consultants)
+    			throw new Exception("No consultant has been selected.", 1);
+        	if(!$from || !$to)
+    			throw new Exception("Please fill all the dates from the period.", 1);
 
-			echo "To";
-			dump($to);
-		}
+	    	if($request->developer) {
+				echo "Consultants";
+				dump($consultants);
 
-    	$graphic = [];
-    	$custo_fixo_medio = 0;
-    	foreach ($consultants as $consultant) {
+				echo "From";
+				dump($from);
 
-    		$consultant = User::find($consultant);
+				echo "To";
+				dump($to);
+			}
 
-    		// Custo Fixo
-    		$salary = $consultant->salary;
-    		$custo_fixo_medio += $salary->brut_salario;
+	    	$graphic = [];
+	    	$custo_fixo_medio = 0;
+	    	foreach ($consultants as $consultant) {
 
-    		if($request->developer) {
-    			echo "Consultant";
-    			dump($consultant);
-    		}
+	    		$consultant = User::find($consultant);
+	    		$graphic['consultants'][ $consultant->co_usuario ]['no_usuario'] = $consultant->no_usuario;
 
-    		$service_orders = $consultant->service_orders;
+	    		// Custo Fixo
+	    		$salary = $consultant->salary;
 
-    		foreach ($service_orders as $service_order) {
+	    		if(!$salary)
+        			throw new Exception("The consultant '$consultant->no_usuario' doesn't have a salary.", 1);
+	    		
+	    		$custo_fixo_medio += $salary->brut_salario;
 
-    			$invoices = $service_order->invoices;
+	    		if($request->developer) {
+	    			echo "Consultant";
+	    			dump($consultant);
+	    		}
 
-    			foreach ($invoices as $invoice) {
-    				$created_at = Carbon::parse($invoice->data_emissao);
+	    		$service_orders = $consultant->service_orders;
 
-	    			if( $created_at->between($from, $to) ) {
-	    				// Receita liquida
-	    				$receita_liquida = $invoice->valor - ( $invoice->valor * ( $invoice->total_imp_inc / 100 ) );
-	    				
-	    				$created_at_s = $created_at->format('Y-m');
+	    		foreach ($service_orders as $service_order) {
 
-	    				if( !isset($graphic['graphic'][ $consultant->co_usuario ][ $created_at_s ] ) ) {
-	    					$graphic['graphic'][ $consultant->co_usuario ][ $created_at_s ]['receita_liquida'] = 0;
-	    				} else {
-	    					$graphic['graphic'][ $consultant->co_usuario ][ $created_at_s ]['receita_liquida'] += $receita_liquida;
-	    				}
+	    			$invoices = $service_order->invoices;
+
+	    			foreach ($invoices as $invoice) {
+	    				$created_at = Carbon::parse($invoice->data_emissao);
+
+		    			if( $created_at->between($from, $to) ) {
+		    				// Receita liquida
+		    				$receita_liquida = $invoice->valor - ( $invoice->valor * ( $invoice->total_imp_inc / 100 ) );
+		    				$receita_liquida = round($receita_liquida);
+		    				$created_at_s = $created_at->format('Y-m');
+
+		    				if( !isset($graphic['consultants'][ $consultant->co_usuario ]['graphic']['period'][ $created_at_s ] ) ) {
+		    					$graphic['consultants'][ $consultant->co_usuario ]['graphic']['period'][ $created_at_s ] = 0;
+		    				} else {
+		    					$graphic['consultants'][ $consultant->co_usuario ]['graphic']['period'][ $created_at_s ] += $receita_liquida;
+		    				}
+		    			}
 	    			}
-    			}
-    		}
-    	}
+	    		}
+	    	}
 
-		$graphic['custo_fixo_medio'] = $custo_fixo_medio / count($consultants);
+			$graphic['custo_fixo_medio'] = $custo_fixo_medio / count($consultants);
 
-		if($request->developer) {
-			echo "Graphic data";
-			dd($graphic);
-		}
+			if($request->developer) {
+				echo "Graphic data";
+				dd($graphic);
+			}
 
-        return view('dashboard.consultant.graphic')->with(['graphic'=> $graphic]);
+	        return view('dashboard.consultant.graphic')->with(['graphic'=> $graphic]);
+
+	    } catch (\Exception $exception) {
+            \Log::error($exception->getMessage());
+            return back()
+                    ->with('notification_error', $exception->getMessage())
+                    ->withInput();
+        }
     }
 
     /**
@@ -216,66 +256,85 @@ class ConsultantController extends Controller
     	$request->from = '2007-01-01';
     	$request->to = '2008-01-01';*/
 
-    	$consultants =  $request->consultants;
+    	try {
 
-    	$from = Carbon::parse($request->from);
-    	$to = Carbon::parse($request->to);
+	    	$consultants =  $request->consultants;
 
-    	if($request->developer) {
-			echo "Consultants";
-			dump($consultants);
+	    	$from = Carbon::parse($request['from-date']);
+        	$to = Carbon::parse($request['to-date']);
 
-			echo "From";
-			dump($from);
+	    	if(!$consultants)
+    			throw new Exception("No consultant has been selected.", 1);
+        	if(!$from || !$to)
+    			throw new Exception("Please fill all the dates from the period.", 1);
 
-			echo "To";
-			dump($to);
-		}
+	    	if($request->developer) {
+				echo "Consultants";
+				dump($consultants);
 
-    	$cake = [];
-    	$cake['total'] = 0;
-    	foreach ($consultants as $consultant) {
+				echo "From";
+				dump($from);
 
-    		$consultant = User::find($consultant);
+				echo "To";
+				dump($to);
+			}
 
-    		if($request->developer) {
-    			echo "Consultant";
-    			dump($consultant);
-    		}
+	    	$cake = [];
+	    	$cake['total'] = 0;
+	    	foreach ($consultants as $consultant) {
 
-    		$service_orders = $consultant->service_orders;
+	    		$consultant = User::find($consultant);
 
-    		foreach ($service_orders as $service_order) {
+	    		if($request->developer) {
+	    			echo "Consultant";
+	    			dump($consultant);
+	    		}
 
-    			$invoices = $service_order->invoices;
+	    		$service_orders = $consultant->service_orders;
 
-    			foreach ($invoices as $invoice) {
-    				$created_at = Carbon::parse($invoice->data_emissao);
+	    		foreach ($service_orders as $service_order) {
 
-	    			if( $created_at->between($from, $to) ) {
-	    				// Receita liquida
-	    				$receita_liquida = $invoice->valor - ( $invoice->valor * ( $invoice->total_imp_inc / 100 ) );
+	    			$invoices = $service_order->invoices;
 
-	    				if( !isset($cake['cake'][ $consultant->co_usuario ] ) ) {
-	    					$cake['cake'][ $consultant->co_usuario ]['receita_liquida'] = 0;
-	    				} else {
-	    					$cake['total'] += $receita_liquida;
-	    					$cake['cake'][ $consultant->co_usuario ]['receita_liquida'] += $receita_liquida;
-	    				}
+	    			foreach ($invoices as $invoice) {
+	    				$created_at = Carbon::parse($invoice->data_emissao);
+
+		    			if( $created_at->between($from, $to) ) {
+		    				// Receita liquida
+		    				$receita_liquida = $invoice->valor - ( $invoice->valor * ( $invoice->total_imp_inc / 100 ) );
+
+		    				if( !isset($cake['cake'][ $consultant->co_usuario ] ) ) {
+		    					$cake['cake'][ $consultant->co_usuario ]['receita_liquida'] = 0;
+		    				} else {
+		    					$cake['total'] += $receita_liquida;
+		    					$cake['cake'][ $consultant->co_usuario ]['receita_liquida'] += $receita_liquida;
+		    				}
+		    			}
 	    			}
-    			}
-    		}
-    	}
+	    		}
+	    	}
 
-    	foreach ($cake['cake'] as $co_usuario => $consultant) {
-    		$cake['cake'][ $co_usuario ]['percentage'] = round(($consultant['receita_liquida'] * 100) / ($cake['total']), 2);
-    	}
+	    	if(!array_key_exists('cake', $cake)) {
+	    		throw new Exception("None of the consultants has invoices", 1);
+	    	}
 
-		if($request->developer) {
-			echo "Cake data";
-			dd($cake);
-		}
+	    	dd($cake['cake']);
 
-    	return view('dashboard.consultant.cake')->with(['cake'=> $cake]);
+	    	foreach ($cake['cake'] as $co_usuario => $consultant) {
+	    		$cake['cake'][ $co_usuario ]['percentage'] = round(($consultant['receita_liquida'] * 100) / ($cake['total']), 2);
+	    	}
+
+			if($request->developer) {
+				echo "Cake data";
+				dd($cake);
+			}
+
+	    	return view('dashboard.consultant.cake')->with(['cake'=> $cake]);
+	    } catch (\Exception $exception) {
+            \Log::error($exception->getMessage());
+            return back()
+                    ->with('notification_error', $exception->getMessage())
+                    ->withInput();
+        }
     }
 }

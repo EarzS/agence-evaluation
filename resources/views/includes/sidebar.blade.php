@@ -14,7 +14,7 @@
                 <h3>General</h3>
                 <ul class="nav side-menu">
                     <li>
-                        <a href="javascript:void(0)">
+                        <a href="{{route('consultant.index')}}">
                             <i class="fa fa-home"></i>
                             Agence
                             
