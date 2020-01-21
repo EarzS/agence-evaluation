@@ -60,8 +60,8 @@
                     {
                         label: "{{$consultant['no_usuario']}}",
                         backgroundColor: getRandomColor(),
-                        data: <?php echo json_encode($consultant['graphic']['period']); ?>,
-                        //data: [51, 30, 40, 28, 92, 50, 45]
+                        //data: <?php echo json_encode($consultant['graphic']['period']); ?>,
+                        data: [51, 30, 40, 28, 92, 50, 45]
                     },
                 @endforeach
                 ]
