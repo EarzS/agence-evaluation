@@ -7,6 +7,7 @@ use App\Models\User;
 use Exception;
 
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 
 class ConsultantController extends Controller
 {
@@ -57,6 +58,7 @@ class ConsultantController extends Controller
 
         	$from = Carbon::parse($request['from-date']);
         	$to = Carbon::parse($request['to-date']);
+        	$period = CarbonPeriod::create($from, '1 month', $to);
 
         	if(!$consultants)
     			throw new Exception("No consultant has been selected.", 1);
@@ -79,8 +81,6 @@ class ConsultantController extends Controller
 
         		$consultant = User::find($consultant);
 
-        		$relatory[ $consultant->co_usuario ]['no_usuario'] = $consultant->no_usuario;
-
         		if($request->developer) {
         			echo "Consultant";
         			dump($consultant);
@@ -92,8 +92,15 @@ class ConsultantController extends Controller
         		if(!$salary)
         			throw new Exception("The consultant '$consultant->no_usuario' doesn't have a salary.", 1);
         			
-        		
         		$custo_fixo = $salary->brut_salario;
+
+        		$relatory[ $consultant->co_usuario ]['no_usuario'] = $consultant->no_usuario;
+        		foreach ($period as $date) {
+	    			$relatory[ $consultant->co_usuario ]['period'][$date->format('Y-m')]['receita_liquida'] = 0;
+	    			$relatory[ $consultant->co_usuario ]['period'][$date->format('Y-m')]['custo_fixo'] = $custo_fixo;
+	    			$relatory[ $consultant->co_usuario ]['period'][$date->format('Y-m')]['comissao'] = 0;
+	    			$relatory[ $consultant->co_usuario ]['period'][$date->format('Y-m')]['lucro'] = 0;
+	    		}
 
         		$service_orders = $consultant->service_orders;
 
@@ -113,12 +120,12 @@ class ConsultantController extends Controller
 
         					$created_at_s = $created_at->format('Y-m');
 
-        					if( !isset($relatory[ $consultant->co_usuario ]['period'][ $created_at_s ] ) ) {
+        					/*if( !isset($relatory[ $consultant->co_usuario ]['period'][ $created_at_s ] ) ) {
         						$relatory[ $consultant->co_usuario ]['period'][ $created_at_s ]['receita_liquida'] = 0;
         						$relatory[ $consultant->co_usuario ]['period'][ $created_at_s ]['custo_fixo'] = $custo_fixo;
         						$relatory[ $consultant->co_usuario ]['period'][ $created_at_s ]['comissao'] = 0;
         						$relatory[ $consultant->co_usuario ]['period'][ $created_at_s ]['lucro'] = 0;
-        					} else {
+        					} else {*/
         						$relatory[ $consultant->co_usuario ]['period'][ $created_at_s ]['receita_liquida'] += $receita_liquida;
         						$relatory[ $consultant->co_usuario ]['period'][ $created_at_s ]['comissao'] += $comissao;
 
@@ -127,7 +134,7 @@ class ConsultantController extends Controller
         						$relatory[ $consultant->co_usuario ]['period'][ $created_at_s ]['receita_liquida'] - 
         						( $relatory[ $consultant->co_usuario ]['period'][ $created_at_s ]['custo_fixo'] +
         							$relatory[ $consultant->co_usuario ]['period'][ $created_at_s ]['comissao'] );
-        					}
+        					//}
         				}
         			}
 
@@ -165,6 +172,12 @@ class ConsultantController extends Controller
 
 	    	$from = Carbon::parse($request['from-date']);
         	$to = Carbon::parse($request['to-date']);
+        	$period = CarbonPeriod::create($from, '1 month', $to);
+
+        	$months = [];
+        	foreach ($period as $date) {
+        		$months[] = $date->format('Y M');
+        	}
 
 	    	if(!$consultants)
     			throw new Exception("No consultant has been selected.", 1);
@@ -183,11 +196,17 @@ class ConsultantController extends Controller
 			}
 
 	    	$graphic = [];
+	    	$graphic['months'] = $months;
 	    	$custo_fixo_medio = 0;
 	    	foreach ($consultants as $consultant) {
 
 	    		$consultant = User::find($consultant);
 	    		$graphic['consultants'][ $consultant->co_usuario ]['no_usuario'] = $consultant->no_usuario;
+
+	    		foreach ($period as $date) {
+	    			$graphic['consultants'][ $consultant->co_usuario ]['graphic']['period'][$date->format('Y-m')] = 0;
+	    		}
+	    		
 
 	    		// Custo Fixo
 	    		$salary = $consultant->salary;
@@ -206,7 +225,7 @@ class ConsultantController extends Controller
 
 	    		foreach ($service_orders as $service_order) {
 
-	    			$invoices = $service_order->invoices;
+	    			$invoices = $service_order->invoices->sortBy('data_emissao');
 
 	    			foreach ($invoices as $invoice) {
 	    				$created_at = Carbon::parse($invoice->data_emissao);
@@ -217,11 +236,11 @@ class ConsultantController extends Controller
 		    				$receita_liquida = round($receita_liquida);
 		    				$created_at_s = $created_at->format('Y-m');
 
-		    				if( !isset($graphic['consultants'][ $consultant->co_usuario ]['graphic']['period'][ $created_at_s ] ) ) {
+		    				/*if( !isset($graphic['consultants'][ $consultant->co_usuario ]['graphic']['period'][ $created_at_s ] ) ) {
 		    					$graphic['consultants'][ $consultant->co_usuario ]['graphic']['period'][ $created_at_s ] = 0;
-		    				} else {
+		    				} else {*/
 		    					$graphic['consultants'][ $consultant->co_usuario ]['graphic']['period'][ $created_at_s ] += $receita_liquida;
-		    				}
+		    				//}
 		    			}
 	    			}
 	    		}
@@ -317,8 +336,6 @@ class ConsultantController extends Controller
 	    	if(!array_key_exists('cake', $cake)) {
 	    		throw new Exception("None of the consultants has invoices", 1);
 	    	}
-
-	    	dd($cake['cake']);
 
 	    	foreach ($cake['cake'] as $co_usuario => $consultant) {
 	    		$cake['cake'][ $co_usuario ]['percentage'] = round(($consultant['receita_liquida'] * 100) / ($cake['total']), 2);

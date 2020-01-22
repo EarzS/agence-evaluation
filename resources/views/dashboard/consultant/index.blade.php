@@ -83,5 +83,10 @@
 	<script src="{{ asset("js/moment.min.js") }}"></script>
 	<script src="{{ asset("js/daterangepicker.min.js") }}"></script>
 
-	<script src="{{ asset("js/custom.js") }}"></script>
+	<script>
+		$("#from-date, #to-date").daterangepicker({
+			singleDatePicker: true,
+			showDropdowns: true
+		});
+	</script>
 @endpush

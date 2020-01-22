@@ -38,30 +38,30 @@
 
     <script type="text/javascript">
 
-        function getRandomColor() {
-            var letters = '0123456789ABCDEF'.split('');
-            var color = '#';
-            for (var i = 0; i < 6; i++ ) {
-                color += letters[Math.floor(Math.random() * 16)];
-            }
-            return color;
-        }
+        var randomScalingFactor = function() {
+          return Math.round(Math.random() * 100);
+        };
+        var randomColorFactor = function() {
+          return Math.round(Math.random() * 255);
+        };
+        var getRandomColor = function(opacity) {
+          return 'rgba(' + randomColorFactor() + ',' + randomColorFactor() + ',' + randomColorFactor() + ',' + (opacity || '.3') + ')';
+        };
 
-        var period = <?php echo json_encode($graphic['consultants']['carlos.arruda']['graphic']['period']); ?>;
-        console.log(period);
+        var labels = <?php echo json_encode($graphic['months']); ?>;
 
         var ctx = document.getElementById('myChart').getContext('2d');
         var myChart = new Chart(ctx, {
             type: "bar",
             data: {
-                labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'Setemper', 'November','December'],
+                labels: labels,
                 datasets: [
                 @foreach($graphic['consultants'] as $co_usuario => $consultant)
                     {
                         label: "{{$consultant['no_usuario']}}",
                         backgroundColor: getRandomColor(),
-                        //data: <?php echo json_encode($consultant['graphic']['period']); ?>,
-                        data: [51, 30, 40, 28, 92, 50, 45]
+                        data: <?php echo json_encode(array_values($consultant['graphic']['period'])); ?>,
+                        //data: [51, 30, 40, 28, 92, 50, 45]
                     },
                 @endforeach
                 ]
