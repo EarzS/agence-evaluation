@@ -64,6 +64,12 @@
                         //data: [51, 30, 40, 28, 92, 50, 45]
                     },
                 @endforeach
+                    {
+                        label: "Average Fixed Cost",
+                        backgroundColor: getRandomColor(),
+                        data: <?php echo json_encode(array_fill(0, count($graphic['months']), $graphic['custo_fixo_medio'])); ?>,
+                        type: "line"
+                    }
                 ]
             },
             options: {

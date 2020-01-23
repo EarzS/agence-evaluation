@@ -62,7 +62,7 @@
 
 						<div class="item form-group">
 							<div class="col-md-6 col-sm-6 offset-md-3">
-								<button class="btn btn-primary" type="reset">Reset</button>
+								<a class="btn btn-primary" onclick="location.reload();">Reset</a>
 								<button type="submit" class="btn btn-success" formaction="{{route('consultant.relatory')}}">Relatory</button>
 								<button type="submit" class="btn btn-success" formaction="{{route('consultant.graphic')}}">Graphic</button>
 								<button type="submit" class="btn btn-success" formaction="{{route('consultant.cake')}}">Cake</button>

@@ -47,7 +47,8 @@ class ConsultantController extends Controller
     public function relatory(Request $request)
     {
     	/*$request->consultants = [
-    		'carlos.arruda'
+    		'carlos.arruda',
+            'anapaula.chiodaro'
     	];
     	$request->from = '2007-01-01';
     	$request->to = '2008-01-01';*/
@@ -58,13 +59,18 @@ class ConsultantController extends Controller
 
         	$from = Carbon::parse($request['from-date']);
         	$to = Carbon::parse($request['to-date']);
+
+            if(!$from || !$to)
+                throw new Exception("Please fill all the dates from the period.", 1);
+
+            if($from->gt($to)) 
+                throw new Exception("The start date is greater that the end date.", 1);
+
         	$period = CarbonPeriod::create($from, '1 month', $to);
 
         	if(!$consultants)
     			throw new Exception("No consultant has been selected.", 1);
-        	if(!$from || !$to)
-    			throw new Exception("Please fill all the dates from the period.", 1);
-
+        	
         	if($request->developer) {
         		echo "Consultants";
         		dump($consultants);
@@ -120,21 +126,15 @@ class ConsultantController extends Controller
 
         					$created_at_s = $created_at->format('Y-m');
 
-        					/*if( !isset($relatory[ $consultant->co_usuario ]['period'][ $created_at_s ] ) ) {
-        						$relatory[ $consultant->co_usuario ]['period'][ $created_at_s ]['receita_liquida'] = 0;
-        						$relatory[ $consultant->co_usuario ]['period'][ $created_at_s ]['custo_fixo'] = $custo_fixo;
-        						$relatory[ $consultant->co_usuario ]['period'][ $created_at_s ]['comissao'] = 0;
-        						$relatory[ $consultant->co_usuario ]['period'][ $created_at_s ]['lucro'] = 0;
-        					} else {*/
-        						$relatory[ $consultant->co_usuario ]['period'][ $created_at_s ]['receita_liquida'] += $receita_liquida;
-        						$relatory[ $consultant->co_usuario ]['period'][ $created_at_s ]['comissao'] += $comissao;
+							$relatory[ $consultant->co_usuario ]['period'][ $created_at_s ]['receita_liquida'] += $receita_liquida;
+							$relatory[ $consultant->co_usuario ]['period'][ $created_at_s ]['comissao'] += $comissao;
 
-								// Lucro 
-        						$relatory[ $consultant->co_usuario ]['period'][ $created_at_s ]['lucro'] = 
-        						$relatory[ $consultant->co_usuario ]['period'][ $created_at_s ]['receita_liquida'] - 
-        						( $relatory[ $consultant->co_usuario ]['period'][ $created_at_s ]['custo_fixo'] +
-        							$relatory[ $consultant->co_usuario ]['period'][ $created_at_s ]['comissao'] );
-        					//}
+							// Lucro 
+							$relatory[ $consultant->co_usuario ]['period'][ $created_at_s ]['lucro'] = 
+							$relatory[ $consultant->co_usuario ]['period'][ $created_at_s ]['receita_liquida'] - 
+							( $relatory[ $consultant->co_usuario ]['period'][ $created_at_s ]['custo_fixo'] +
+								$relatory[ $consultant->co_usuario ]['period'][ $created_at_s ]['comissao'] );
+
         				}
         			}
 
@@ -172,6 +172,13 @@ class ConsultantController extends Controller
 
 	    	$from = Carbon::parse($request['from-date']);
         	$to = Carbon::parse($request['to-date']);
+
+        	if(!$from || !$to)
+                throw new Exception("Please fill all the dates from the period.", 1);
+
+            if($from->gt($to)) 
+                throw new Exception("The start date is greater that the end date.", 1);
+
         	$period = CarbonPeriod::create($from, '1 month', $to);
 
         	$months = [];
@@ -181,8 +188,6 @@ class ConsultantController extends Controller
 
 	    	if(!$consultants)
     			throw new Exception("No consultant has been selected.", 1);
-        	if(!$from || !$to)
-    			throw new Exception("Please fill all the dates from the period.", 1);
 
 	    	if($request->developer) {
 				echo "Consultants";
@@ -236,11 +241,7 @@ class ConsultantController extends Controller
 		    				$receita_liquida = round($receita_liquida);
 		    				$created_at_s = $created_at->format('Y-m');
 
-		    				/*if( !isset($graphic['consultants'][ $consultant->co_usuario ]['graphic']['period'][ $created_at_s ] ) ) {
-		    					$graphic['consultants'][ $consultant->co_usuario ]['graphic']['period'][ $created_at_s ] = 0;
-		    				} else {*/
-		    					$graphic['consultants'][ $consultant->co_usuario ]['graphic']['period'][ $created_at_s ] += $receita_liquida;
-		    				//}
+	    					$graphic['consultants'][ $consultant->co_usuario ]['graphic']['period'][ $created_at_s ] += $receita_liquida;
 		    			}
 	    			}
 	    		}
@@ -282,10 +283,14 @@ class ConsultantController extends Controller
 	    	$from = Carbon::parse($request['from-date']);
         	$to = Carbon::parse($request['to-date']);
 
+        	if(!$from || !$to)
+                throw new Exception("Please fill all the dates from the period.", 1);
+
+            if($from->gt($to)) 
+                throw new Exception("The start date is greater that the end date.", 1);
+
 	    	if(!$consultants)
     			throw new Exception("No consultant has been selected.", 1);
-        	if(!$from || !$to)
-    			throw new Exception("Please fill all the dates from the period.", 1);
 
 	    	if($request->developer) {
 				echo "Consultants";

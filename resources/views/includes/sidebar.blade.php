@@ -19,6 +19,9 @@
                             Agence
                             
                         </a>
+                        <ul class="nav child_menu" style="display: block;">
+                            <li><a href="{{route('consultant.index')}}">Consultants</a></li>
+                        </ul>
                     </li>
 
                     <li>
