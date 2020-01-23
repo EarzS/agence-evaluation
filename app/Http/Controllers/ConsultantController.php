@@ -25,20 +25,28 @@ class ConsultantController extends Controller
      */
     public function index(Request $request)
     {
-    	// Retrieve all Consultants https://stackoverflow.com/questions/52149031/laravel-join-query-with-conditions
-		$consultants = 	User::whereHas('consultants', function($query) {
+        try {
+        	// Retrieve all Consultants https://stackoverflow.com/questions/52149031/laravel-join-query-with-conditions
+    		$consultants = 	User::whereHas('consultants', function($query) {
 
-			$query	->where('co_sistema', 1)
-					->where('in_ativo', 'S')
-					->whereIn('co_tipo_usuario', [0,1,2]);
-		})->get();
+    			$query	->where('co_sistema', 1)
+    					->where('in_ativo', 'S')
+    					->whereIn('co_tipo_usuario', [0,1,2]);
+    		})->get();
 
-		if($request->developer) {
-			echo "Consultants";
-			dd($consultants);
-		}
+    		if($request->developer) {
+    			echo "Consultants";
+    			dd($consultants);
+    		}
 
-        return view('dashboard.consultant.index')->with(['consultants'=> $consultants]);
+            return view('dashboard.consultant.index')->with(['consultants'=> $consultants]);
+        } catch (\Exception $exception) {
+            \Log::error($exception->getMessage());
+            return view('dashboard.consultant.index')
+                    ->with(['consultants'=> []])
+                    ->with('notification_error', $exception->getMessage())
+                    ->withInput();
+        }
     }
 
     /**
