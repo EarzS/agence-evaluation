@@ -41,6 +41,7 @@ class ConsultantController extends Controller
 
             return view('dashboard.consultant.index')->with(['consultants'=> $consultants]);
         } catch (\Exception $exception) {
+            dd($exception->getMessage());
             \Log::error($exception->getMessage());
             return $exception->render();
         }
